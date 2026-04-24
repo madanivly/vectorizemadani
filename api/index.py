@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import Response
-import vtracer
+import vtracer.vtracer as vtr  # We give it a nickname 'vtr' to avoid confusion
 import tempfile
 import os
 
@@ -15,22 +15,16 @@ async def vectorize(file: UploadFile = File(...)):
     output_path = tmp_path + ".svg"
     
     try:
-        # This is the standard call for the vtracer-python library
-        vtracer.vtracer(tmp_path, output_path)
+        # Now we use the nickname to call the convert function
+        vtr.convert_image_to_svg(tmp_path, output_path)
         
         with open(output_path, "r") as f:
             svg_code = f.read()
+            
         return Response(content=svg_code, media_type="image/svg+xml")
     
     except Exception as e:
-        # If the direct call fails, try the convert_to_svg method
-        try:
-            vtracer.convert_to_svg(tmp_path, output_path)
-            with open(output_path, "r") as f:
-                svg_code = f.read()
-            return Response(content=svg_code, media_type="image/svg+xml")
-        except:
-            return Response(content=f"Engine Error: {str(e)}", status_code=500)
+        return Response(content=f"Final Engine Error: {str(e)}", status_code=500)
     
     finally:
         if os.path.exists(tmp_path): os.remove(tmp_path)
