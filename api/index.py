@@ -1,6 +1,5 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import Response
-from fastapi.staticfiles import StaticFiles
 from PIL import Image, ImageFilter, ImageEnhance
 import vtracer
 import tempfile
@@ -72,6 +71,3 @@ async def vectorize(file: UploadFile = File(...)):
         for path in [tmp_path, preprocessed_path, output_path]:
             if os.path.exists(path):
                 os.remove(path)
-
-# Serve index.html at root (must be after API routes)
-app.mount("/", StaticFiles(directory=".", html=True), name="static")
