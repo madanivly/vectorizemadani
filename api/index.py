@@ -11,8 +11,8 @@ app = FastAPI()
 def preprocess_image(input_path: str, output_path: str):
     img = Image.open(input_path).convert("RGBA")
 
-    # 1. Upscale 2x for better detail
-    new_size = (img.width * 2, img.height * 2)
+    # 1. Upscale 3x for better detail
+    new_size = (img.width * 3, img.height * 3)
     img = img.resize(new_size, Image.LANCZOS)
 
     # 2. Flatten alpha onto white background
