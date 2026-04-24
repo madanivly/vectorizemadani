@@ -21,3 +21,4 @@ async def vectorize(file: UploadFile = File(...)):
     os.remove(tmp_path)
     os.remove(output_path)
     return Response(content=svg_code, media_type="image/svg+xml")
+    app = app
