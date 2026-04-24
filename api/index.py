@@ -8,17 +8,30 @@ app = FastAPI()
 
 @app.post("/api/vectorize")
 async def vectorize(file: UploadFile = File(...)):
-    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
-        tmp.write(await file.read())
+    # Vercel only allows writing to the /tmp directory
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False, dir="/tmp") as tmp:
+        content = await file.read()
+        tmp.write(content)
         tmp_path = tmp.name
     
-    output_path = tmp_path.replace(".png", ".svg")
-    vtracer.convert_image_to_svg(tmp_path, output_path)
+    # Define output path in the same /tmp directory
+    output_path = tmp_path + ".svg"
     
-    with open(output_path, "r") as f:
-        svg_code = f.read()
+    try:
+        # Run the vectorization
+        vtracer.convert_image_to_svg(tmp_path, output_path)
+        
+        with open(output_path, "r") as f:
+            svg_code = f.read()
+            
+        return Response(content=svg_code, media_type="image/svg+xml")
     
-    os.remove(tmp_path)
-    os.remove(output_path)
-    return Response(content=svg_code, media_type="image/svg+xml")
-    app = app
+    except Exception as e:
+        return Response(content=f"Error: {str(e)}", status_code=500)
+    
+    finally:
+        # Always clean up files to avoid filling up server memory
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+        if os.path.exists(output_path):
+            os.remove(output_path)
