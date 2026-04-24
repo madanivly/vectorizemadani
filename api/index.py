@@ -19,7 +19,7 @@ async def vectorize(file: UploadFile = File(...)):
     
     try:
         # Run the vectorization
-        vtracer.convert(tmp_path, output_path)
+        vtracer.convert_image_to_svg(tmp_path, output_path)
         
         with open(output_path, "r") as f:
             svg_code = f.read()
