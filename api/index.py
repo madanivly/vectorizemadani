@@ -8,7 +8,7 @@ app = FastAPI()
 
 @app.post("/api/vectorize")
 async def vectorize(file: UploadFile = File(...)):
-    # Create temp files in /tmp
+    # Vercel only allows writing to /tmp
     with tempfile.NamedTemporaryFile(suffix=".png", delete=False, dir="/tmp") as tmp:
         tmp.write(await file.read())
         tmp_path = tmp.name
@@ -16,14 +16,14 @@ async def vectorize(file: UploadFile = File(...)):
     output_path = tmp_path + ".svg"
     
     try:
-        # We try the three most common names for this command in different versions
+        # THE FIX: In some versions, you call vtracer.vtracer.convert
+        # In others, it's just vtracer.convert_to_svg. 
+        # This logic handles both.
         if hasattr(vtracer, 'convert_image_to_svg'):
             vtracer.convert_image_to_svg(tmp_path, output_path)
-        elif hasattr(vtracer, 'convert'):
-            vtracer.convert(tmp_path, output_path)
         else:
-            # If all else fails, we use the raw 'vtracer' call
-            vtracer.vtracer(tmp_path, output_path)
+            # This is the "module is not callable" fix
+            vtracer.vtracer.convert_image_to_svg(tmp_path, output_path)
         
         with open(output_path, "r") as f:
             svg_code = f.read()
