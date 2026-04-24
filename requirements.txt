@@ -1,3 +1,5 @@
 fastapi
-vtracer
+uvicorn
 python-multipart
+vtracer
+Pillow
