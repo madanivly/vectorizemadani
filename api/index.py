@@ -11,25 +11,34 @@ app = FastAPI()
 def preprocess_image(input_path: str, output_path: str):
     img = Image.open(input_path).convert("RGBA")
 
-    # 1. Upscale 3x for better detail
-    new_size = (img.width * 3, img.height * 3)
-    img = img.resize(new_size, Image.LANCZOS)
+    # Upscale 3x but cap at 4000px on longest side to avoid memory crash
+    scale = 3
+    max_side = 4000
+    new_w = img.width * scale
+    new_h = img.height * scale
 
-    # 2. Flatten alpha onto white background
+    if max(new_w, new_h) > max_side:
+        ratio = max_side / max(new_w, new_h)
+        new_w = int(new_w * ratio)
+        new_h = int(new_h * ratio)
+
+    img = img.resize((new_w, new_h), Image.LANCZOS)
+
+    # Flatten alpha onto white background
     background = Image.new("RGB", img.size, (255, 255, 255))
     background.paste(img, mask=img.split()[3])
     img = background
 
-    # 3. Slight blur to reduce pixel noise
+    # Slight blur to reduce pixel noise
     img = img.filter(ImageFilter.GaussianBlur(radius=0.5))
 
-    # 4. Boost contrast for cleaner color boundaries
+    # Boost contrast for cleaner color boundaries
     img = ImageEnhance.Contrast(img).enhance(1.3)
 
-    # 5. Sharpen edges for cleaner path detection
+    # Sharpen edges for cleaner path detection
     img = img.filter(ImageFilter.SHARPEN)
 
-    img.save(output_path, format="PNG")
+    img.save(output_path, format="PNG", optimize=True)
 
 
 @app.post("/api/vectorize")
@@ -64,6 +73,9 @@ async def vectorize(file: UploadFile = File(...)):
             svg_code = f.read()
 
         return Response(content=svg_code, media_type="image/svg+xml")
+
+    except MemoryError:
+        return Response(content="Error: image too large, try a smaller file", status_code=500)
 
     except Exception as e:
         return Response(content=f"Error: {str(e)}", status_code=500)
