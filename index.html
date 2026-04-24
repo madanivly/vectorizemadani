@@ -1,8 +1,37 @@
+<!DOCTYPE html>
 <html>
-  <body style="background: #f0f0f0; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif;">
-    <div style="background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center;">
-      <h1>My Vectorizer App</h1>
-      <button style="background: #007AFF; color: white; border: none; padding: 15px 30px; border-radius: 10px; cursor: pointer;">Upload Image</button>
+<head>
+    <title>AI Vectorizer</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 50px; background: #fafafa; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); text-align: center; }
+        #preview { margin-top: 20px; max-width: 500px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Upload Image to Vectorize</h1>
+        <input type="file" id="imageInput" accept="image/*">
+        <button onclick="processImage()">Convert to SVG</button>
     </div>
-  </body>
+    <div id="output"></div>
+
+    <script>
+        async function processImage() {
+            const input = document.getElementById('imageInput');
+            if (!input.files[0]) return alert("Please select a file!");
+
+            const formData = new FormData();
+            formData.append('file', input.files[0]);
+
+            const response = await fetch('/api/vectorize', {
+                method: 'POST',
+                body: formData
+            });
+
+            const svgContent = await response.text();
+            document.getElementById('output').innerHTML = `<h3>Your SVG:</h3>${svgContent}`;
+        }
+    </script>
+</body>
 </html>
