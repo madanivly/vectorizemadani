@@ -1,5 +1,5 @@
 from fastapi import FastAPI, UploadFile, File
-from fastapi.responses import Response, HTMLResponse
+from fastapi.responses import Response
 from PIL import Image, ImageFilter, ImageEnhance
 import vtracer
 import tempfile
@@ -7,11 +7,6 @@ import os
 
 app = FastAPI()
 
-HTML = open(os.path.join(os.path.dirname(__file__), "index.html")).read()
-
-@app.get("/")
-async def root():
-    return HTMLResponse(content=HTML)
 
 def preprocess_image(input_path: str, output_path: str):
     img = Image.open(input_path).convert("RGBA")
