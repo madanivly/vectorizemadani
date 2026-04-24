@@ -15,9 +15,14 @@ async def vectorize(file: UploadFile = File(...)):
     output_path = tmp_path + ".svg"
     
     try:
-        # THE RAW FIX:
-        # We are bypassing the module wrappers and calling the engine directly.
-        vtracer.vtracer.convert_image_to_svg(tmp_path, output_path)
+        # THE "STUBBORN LIBRARY" FIX:
+        # We call vtracer.vtracer as the function itself.
+        vtracer.vtracer(
+            tmp_path, 
+            output_path,
+            mode='spline',
+            clustering_mode='k-means'
+        )
         
         with open(output_path, "r") as f:
             svg_code = f.read()
@@ -25,14 +30,7 @@ async def vectorize(file: UploadFile = File(...)):
         return Response(content=svg_code, media_type="image/svg+xml")
     
     except Exception as e:
-        # If that fails, try the absolute simplest call possible
-        try:
-            vtracer.convert_image_to_svg(tmp_path, output_path)
-            with open(output_path, "r") as f:
-                svg_code = f.read()
-            return Response(content=svg_code, media_type="image/svg+xml")
-        except Exception as e2:
-            return Response(content=f"Final Engine Check: {str(e)} | {str(e2)}", status_code=500)
+        return Response(content=f"Library structure error: {str(e)}", status_code=500)
     
     finally:
         if os.path.exists(tmp_path): os.remove(tmp_path)
